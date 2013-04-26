@@ -5,6 +5,7 @@ A (soon to be) collection of tools for managing various Minecraft related tasks.
 
 
 Copyright (c) 2013, Fernando Freire
+
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
