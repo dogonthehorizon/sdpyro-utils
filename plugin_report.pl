@@ -7,40 +7,21 @@ use strict;
 die &usage unless $#ARGV+1 == 2;
 
 # Get command line arguments.
-my $plugin_input = shift;
+my $plugin_text = shift;
 my $plugin_data  = shift;
 
 # Attempt to open our two data files.
-open INPUT_FILE, $plugin_input or die "Could not open $plugin_input.\n";
+open TEXT_FILE, $plugin_text or die "Could not open $plugin_text.\n";
 open DATA_FILE, $plugin_data or die "Could not open $plugin_data.\n";
+open OUTP_FILE, ">", "output.txt";
 
-# Load our input file into a hash that we can reference later.
-# Keys will be the plugin name and the value will be the version.
-my %plugin_input_hash;
-while(<INPUT_FILE>){
-    # Ignore the first line of the file, since it only contains the date.
-    next if $. == 1;
+my @text = <TEXT_FILE>;
+my @data = <DATA_FILE>;
+my @outp = @text;
 
-    chomp;
-    my ($key, $val) = split /\:/;
-    $plugin_input_hash{$key} = $val;
-}
-
-# Load our data file into a hash that we can reference later.
-# Keys will be the plugin name and values will be the url of the plugin.
-my %plugin_data_hash;
-while(<DATA_FILE>){
-
-    chomp;
-
-    my ($key,$val) = split /,/;
-    $plugin_data_hash{$key} = $val;
-}
-
-foreach my $plugin ( keys %plugin_input_hash){
-    my $url = "Unknown" unless exists $plugin_data_hash{$plugin};
-    printf "%s \t %s \t %s\n", $plugin, $plugin_input_hash{$plugin}, $url;
-}
+close TEXT_FILE;
+close DATA_FILE;
+close OUTP_FILE;
 
 # We've thrown this into a subprogram just in case we decide to extend the
 # functionality of our script later.
@@ -48,4 +29,9 @@ sub usage() {
     print <<USAGE
     Usage: $0 INPUT_FILE INPUT_DATA
 USAGE
+}
+
+# Properly format an anchor and return it
+sub format_url ($) {
+    return "<a href=\"$_\">Download</a>";
 }
