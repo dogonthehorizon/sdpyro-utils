@@ -15,9 +15,29 @@ open TEXT_FILE, $plugin_text or die "Could not open $plugin_text.\n";
 open DATA_FILE, $plugin_data or die "Could not open $plugin_data.\n";
 open OUTP_FILE, ">", "output.txt";
 
-my @text = <TEXT_FILE>;
-my @data = <DATA_FILE>;
-my @outp = @text;
+my %plugins;
+while (<TEXT_FILE>) {
+    next if $. == 1;
+
+    chomp;
+    my ($name,$version) = split /\:/;
+
+    $plugins{$name} = $version;
+}
+
+while (<DATA_FILE>) {
+    chomp;
+    my @links = split /,/;
+    my $name = shift @links;
+    print $name."\n";
+    foreach my $link (@links) {
+        $plugins{$name} .= ",$link";
+    }
+}
+
+foreach my $key (sort keys %plugins){
+    print "$key : $plugins{$key}\n";
+}
 
 close TEXT_FILE;
 close DATA_FILE;
