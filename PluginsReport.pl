@@ -5,11 +5,12 @@ use List::MoreUtils qw( each_array );
 
 # If we don't have two arguments, then chances are we don't have the files
 # we need to make this script work.
-die &usage unless $#ARGV+1 == 2;
+die &usage unless $#ARGV+1 == 3;
 
 # Get command line arguments.
 my $plugin_text = shift;
 my $plugin_data  = shift;
+my $output_file = shift;
 
 # Check the first argument for a call to help.
 if (($plugin_text eq "-h") or ($plugin_text eq "--help")) {
@@ -19,11 +20,29 @@ if (($plugin_text eq "-h") or ($plugin_text eq "--help")) {
 # Attempt to open our two data files.
 open TEXT_FILE, $plugin_text or die "Could not open $plugin_text.\n";
 open DATA_FILE, $plugin_data or die "Could not open $plugin_data.\n";
-open OUTP_FILE, ">", "PluginsReport.html";
-
-#Add the header to the report file.
-print OUTP_FILE "<html>\n  <head>\n    <base target='_blank' />\n    <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />\n  </head>\n  <body>\n";
-print OUTP_FILE "    <h3>".localtime()."</h3>\n    <div id='contentBox' style='margin:0px auto; width:100%; float:left;'>\n";
+open OUTP_FILE, ">", $output_file;
+####################
+# BEGIN PAGE HEADER
+####################
+# Used in our printblock
+my $time = localtime();
+print OUTP_FILE <<HTML
+<html>
+    <head>
+        <base target='_blank' />
+        <meta http-equiv='Content-Type' content='text/html;charset=UTF-8' />
+        <style>
+            body { font-family: sans-serif; }
+        </style>
+    </head>
+    <body>
+    <h3>$time</h3>
+    <div id='contentBox' style='margin:0px auto; width:100%; float:left;'>
+HTML
+;
+####################
+# END PAGE HEADER
+####################
 
 # Read our data files into arrays for processing.
 my @plugins;
@@ -56,25 +75,38 @@ while (my ($plugin, $links) = $iterator->() ) {
         $link_string .= "$url ";
     }
 
-#    print OUTP_FILE $name."\t".$version."\t\t".$link_string."\n";
-    print OUTP_FILE "      <div id='column1' style='float:left; margin:0; width:220;'>".$name."</div>".
-                    "<div id='column2' style='float:left; margin:0; width:220;'>".$version."</div>".
-                    "<div id='column3' style='float:left; margin:0; width:auto;'>".$link_string."</div><br />\n";
+    print OUTP_FILE <<HTML
+        <div id='column1' style='float:left; margin:0; width:220;'>$name</div>
+        <div id='column2' style='float:left; margin:0; width:220;'>$version</div>
+        <div id='column3' style='float:left; margin:0; width:auto;'>$link_string</div><br />
+HTML
 }
 
-#add footer to the OUTP_FILE
-print OUTP_FILE "    </body>\n</html>";
+####################
+# BEGIN PAGE FOOTER
+####################
+print OUTP_FILE <<HTML
+    </body>
+</html>
+HTML
+;
+####################
+# END PAGE FOOTER
+####################
 
 close TEXT_FILE;
 close DATA_FILE;
 close OUTP_FILE;
 
-# We've thrown this into a subprogram just in case we decide to extend the
-# functionality of our script later.
+##
+# usage
+#
+# Print a usage message for the user.
+##
 sub usage() {
     print <<USAGE
     Usage: $0 [opts] PLUGIN_LIST PLUGIN_LINKS
-        
+
         -h, --help      print this message and exit.
 
         PLUGIN_LIST     The list of plugins with their associated version 
@@ -88,7 +120,13 @@ sub usage() {
 USAGE
 }
 
-# Properly format an anchor and return it
+##
+# format_url
+#
+# @param the url that we will be formatting
+#
+# @return the formatted anchor tag
+##
 sub format_url ($) {
     if ($_ eq "N/A") {
       return "N/A";
