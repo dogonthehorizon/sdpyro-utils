@@ -21,6 +21,9 @@ open TEXT_FILE, $plugin_text or die "Could not open $plugin_text.\n";
 open DATA_FILE, $plugin_data or die "Could not open $plugin_data.\n";
 open OUTP_FILE, ">", "PluginsReport.html";
 
+#Add the header to the report file.
+print OUTP_FILE "<html>\n  <head>\n    <base target='_blank' />\n    <meta http-equiv='Content-type' content='text/html;charset=UTF-8' />\n  </head>\n  <body>\n";
+print OUTP_FILE "    <h3>".localtime()."</h3>\n    <div id='contentBox' style='margin:0px auto; width:100%; float:left;'>\n";
 
 # Read our data files into arrays for processing.
 my @plugins;
@@ -53,8 +56,14 @@ while (my ($plugin, $links) = $iterator->() ) {
         $link_string .= "$url ";
     }
 
-    print OUTP_FILE $name.'&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'.$version.'&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;'.$link_string."<br />";
+#    print OUTP_FILE $name."\t".$version."\t\t".$link_string."\n";
+    print OUTP_FILE "      <div id='column1' style='float:left; margin:0; width:220;'>".$name."</div>".
+                    "<div id='column2' style='float:left; margin:0; width:220;'>".$version."</div>".
+                    "<div id='column3' style='float:left; margin:0; width:auto;'>".$link_string."</div><br />\n";
 }
+
+#add footer to the OUTP_FILE
+print OUTP_FILE "    </body>\n</html>";
 
 close TEXT_FILE;
 close DATA_FILE;
@@ -81,5 +90,13 @@ USAGE
 
 # Properly format an anchor and return it
 sub format_url ($) {
-    return "<a href=\"$_\">Download</a>";
+    if ($_ eq "N/A") {
+      return "N/A";
+    }
+
+    if ($_ eq "") {
+      return "No URL / New Plugin"
+    } else {
+       return "<a href=\"$_\">Download</a> &nbsp; ";
+    }
 }
