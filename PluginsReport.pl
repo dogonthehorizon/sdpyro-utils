@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 use strict;
 use List::MoreUtils qw( each_array );
@@ -59,27 +59,32 @@ while(<DATA_FILE>) {
     push @plugin_links, $_;
 }
 
-# Now we can iterate over both arrays at the same time.
+# Make sure our plugins are in ASCII numeric order
+@plugins = sort @plugins;
+@plugin_links = sort @plugin_links;
+
+# Iterate over both arrays at the same time
 my $iterator = each_array @plugins, @plugin_links;
 while (my ($plugin, $links) = $iterator->() ) {
 
     my ($name, $version) = split /:{1}/ , $plugin;
     my @link_list = split /,/ , $links;
-    # The first entry of @link_link will be the plugin name, which we already
-    # have, so lets just toss that value.
-    shift @link_list;
+    my $verify_name = shift @link_list;
 
-    my $link_string;
-    for $_ (@link_list) {
-        my $url = &format_url($_);
-        $link_string .= "$url ";
-    }
+    print $name."\n".$verify_name."\n";
 
-    print OUTP_FILE <<HTML
+    if ($name eq $verify_name) {
+        my $link_string;
+        for $_ (@link_list) {
+            my $url = &format_url($_);
+            $link_string .= "$url ";
+        }
+        print OUTP_FILE <<HTML
         <div id='column1' style='float:left; margin:0; width:220;'>$name</div>
         <div id='column2' style='float:left; margin:0; width:220;'>$version</div>
         <div id='column3' style='float:left; margin:0; width:auto;'>$link_string</div><br />
 HTML
+    }
 }
 
 ####################
