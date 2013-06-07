@@ -48,8 +48,10 @@ HTML
 my @plugins;
 my @plugin_links;
 while(<TEXT_FILE>){
-    # Skip the first result, since it just contains a date string.
-    next if $. == 1;
+    
+    # I removed the date line in the report. this is now not needed -SDpyro
+    ## Skip the first result, since it just contains a date string.
+    #next if $. == 1;
     chomp $_;
     push @plugins, $_;
 }
