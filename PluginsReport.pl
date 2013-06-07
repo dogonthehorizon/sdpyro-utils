@@ -49,7 +49,8 @@ my @plugins;
 my @plugin_links;
 while(<TEXT_FILE>){
     
-    # I removed the date line in the report. this is now not needed -SDpyro
+    # I removed the date line in the report. this is now not needed 
+    # I am thinking we should skip any lines that begin with # in either file -SDpyro
     ## Skip the first result, since it just contains a date string.
     #next if $. == 1;
     chomp $_;
