@@ -1,100 +1,134 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
+
+###########################################################################
+##
+## $Id: PluginsReport.pl,v 1.135 2013/08/06 00:34:42 root Exp $
+##
+###########################################################################
 
 use strict;
+#use warnings;
 use List::MoreUtils qw( each_array );
 
 # If we don't have two arguments, then chances are we don't have the files
 # we need to make this script work.
-die &usage unless $#ARGV+1 == 3;
+#die &usage unless $#ARGV+1 == 1;
 
 # Get command line arguments.
 my $plugin_text = shift;
 my $plugin_data  = shift;
 my $output_file = shift;
 
+my $ID;
+my $VERSION;
+
+$ID      = '$Id: PluginsReport.pl,v 1.135 2013/08/06 00:34:42 root Exp $';
+$VERSION = (split (' ', $ID))[2]; 
+
 # Check the first argument for a call to help.
 if (($plugin_text eq "-h") or ($plugin_text eq "--help")) {
     die &usage;
 }
 
+sub mysort {
+
+   lc($a) cmp lc($b);
+
+ }
+
 # Attempt to open our two data files.
 open TEXT_FILE, $plugin_text or die "Could not open $plugin_text.\n";
 open DATA_FILE, $plugin_data or die "Could not open $plugin_data.\n";
-open OUTP_FILE, ">", $output_file;
+#open OUTP_FILE, ">", $output_file;
 ####################
 # BEGIN PAGE HEADER
 ####################
 # Used in our printblock
 my $time = localtime();
-print OUTP_FILE <<HTML
+#print OUTP_FILE <<HTML
+print <<HTML
 <html>
-    <head>
-        <base target='_blank' />
-        <meta http-equiv='Content-Type' content='text/html;charset=UTF-8' />
-        <style>
-            body { font-family: sans-serif; }
-        </style>
-    </head>
-    <body>
+  <head>
+    <title>PluginsReport v$VERSION</title>
+    <base target='_blank' />
+    <meta http-equiv='Content-Type' content='text/html;charset=UTF-8' />
+      <style>
+          body { font-family: sans-serif; }
+          tr:hover {background-color: #0000FF; color: #FFFFFF;}
+      </style>
+  </head>
+  <body>
     <h3>$time</h3>
-    <div id='contentBox' style='margin:0px auto; width:100%; float:left;'>
+    <table id='contentBox' style='margin:0px auto; width:100%; float:left;'>
 HTML
 ;
+
 ####################
 # END PAGE HEADER
 ####################
 
 # Read our data files into arrays for processing.
-my @plugins;
-my @plugin_links;
+my %pluginName;
+my %pluginVersion;
+my %prodUrl;
+my %devUrl;
+my $link_string;
+
 while(<TEXT_FILE>){
-    
-    # I removed the date line in the report. this is now not needed 
-    # I am thinking we should skip any lines that begin with # in either file -SDpyro
-    ## Skip the first result, since it just contains a date string.
-    #next if $. == 1;
     chomp $_;
-    push @plugins, $_;
+    my ($name, $version) = split (":",$_);
+    $name =~ s/\s+$//g;
+    $version =~ s/^\s+//g;
+
+    $pluginName{$name} = $name;
+    $pluginVersion{$name} = $version;
+
+#    print "$pluginName{$name},$pluginVersion{$name}\n";
 }
+
 
 while(<DATA_FILE>) {
     chomp $_;
-    push @plugin_links, $_;
+    my ($name, $url1, $url2) = split (",",$_);
+    $url1 =~ s/,$//g;
+    $url2 =~ s/,$//g;
+    
+    $prodUrl{$name} = $url1;
+    $devUrl{$name} = $url2;
 }
 
-# Make sure our plugins are in ASCII numeric order
-@plugins = sort @plugins;
-@plugin_links = sort @plugin_links;
+# Sort the Array & output 
+foreach my $key (sort mysort keys %pluginName){ 
 
-# Iterate over both arrays at the same time
-my $iterator = each_array @plugins, @plugin_links;
-while (my ($plugin, $links) = $iterator->() ) {
+  my $link1;
+  my $link2;
 
-    my ($name, $version) = split /:{1}/ , $plugin;
-    my @link_list = split /,/ , $links;
-    my $verify_name = shift @link_list;
+  if ((!defined $prodUrl{$key}) || ($prodUrl{$key} eq "N/A")) {
+    $link1 = "N/A";
+  } else {
+    $link1 = "<a href='$prodUrl{$key}'>Bukkit URL</a>";
+  } 
 
-    print $name."\n".$verify_name."\n";
+  if (defined $devUrl{$key}) {
+    $link2 = ",<a href='$devUrl{$key}'>Dev URL</a>";
+  }
 
-    if ($name eq $verify_name) {
-        my $link_string;
-        for $_ (@link_list) {
-            my $url = &format_url($_);
-            $link_string .= "$url ";
-        }
-        print OUTP_FILE <<HTML
-        <div id='column1' style='float:left; margin:0; width:220;'>$name</div>
-        <div id='column2' style='float:left; margin:0; width:220;'>$version</div>
-        <div id='column3' style='float:left; margin:0; width:auto;'>$link_string</div><br />
+print <<HTML
+      <tr>
+        <td id='column1' style='float:left; margin:0; width:220;'>$pluginName{$key}</td>
+        <td id='column2' style='float:left; margin:0; width:220;'>$pluginVersion{$key}</td>
+        <td id='column3' style='float:left; margin:0; width:auto;'>$link1$link2</td>
+      </tr>
 HTML
-    }
+;
 }
 
 ####################
 # BEGIN PAGE FOOTER
 ####################
-print OUTP_FILE <<HTML
-    </body>
+print <<HTML
+    </table>
+  </body>
 </html>
 HTML
 ;
@@ -113,7 +147,7 @@ close OUTP_FILE;
 ##
 sub usage() {
     print <<USAGE
-    Usage: $0 [opts] PLUGIN_LIST PLUGIN_LINKS
+    Usage: $0 [opts] PLUGIN_LIST PLUGIN_LINKS OUTPUT_FILE
 
         -h, --help      print this message and exit.
 
@@ -122,6 +156,8 @@ sub usage() {
 
         PLUGIN_LINKS    The list of plugins with their associated download 
                         links. Comma delimited.
+
+        OUTPUT_FILE     The file with the final html output
 
         NOTE: This script assumes that BOTH FILES have the SAME NUMBER OF 
               ENTIRES. This script will not work otherwise.
@@ -146,3 +182,6 @@ sub format_url ($) {
        return "<a href=\"$_\">Download</a> &nbsp; ";
     }
 }
+
+
+
