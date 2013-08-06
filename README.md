@@ -6,7 +6,7 @@ A (soon to be) collection of tools for managing various Minecraft related tasks.
 
 License
 =======
-Copyright (c) 2013, Fernando Freire
+Copyright (c) 2013, Fernando Freire, Thomas Sanders
 
 All rights reserved.
 
