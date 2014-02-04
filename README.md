@@ -1,7 +1,7 @@
-spdyro-utils
+spdyro-utils ![Generic](http://img.shields.io/status/complete.png?color=blue)
 ============
 
-A (soon to be) collection of tools for managing various Minecraft related tasks.
+A collection of tools for managing various Minecraft related tasks.
 
 
 License
